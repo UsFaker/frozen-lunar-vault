@@ -1,6 +1,7 @@
 /* Cosmic Theme Styles */
 #cosmic-container {
-    background: radial-gradient(circle at center, #0a0f2c 0%, #000000 100%);
+    background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+    overflow: hidden;
 }
 
 #cosmic-canvas {

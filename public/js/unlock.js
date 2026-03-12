@@ -158,7 +158,7 @@ function initCosmic() {
         layer.appendChild(star);
     }
 
-    // Canvas stars
+    // Canvas stars (Enhanced Cosmic Version)
     const canvas = document.getElementById('cosmic-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -166,27 +166,102 @@ function initCosmic() {
     canvas.height = window.innerHeight;
 
     const stars = [];
-    for(let i=0; i<200; i++) {
+    const colors = ['#ffffff', '#ffe9c4', '#d4fbff', '#a3d8ff']; // white, pale yellow, pale cyan, light blue
+
+    for(let i=0; i<350; i++) {
+        // Parallax depth: 0 is distant, 1 is close
+        const depth = Math.random(); 
         stars.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: Math.random() * 1.5,
-            speed: Math.random() * 0.5
+            size: (Math.random() * 1.2 + 0.3) * (depth + 0.5), // closer stars are bigger
+            speed: (Math.random() * 0.15 + 0.05) * (depth + 0.2), // closer stars move faster
+            color: colors[Math.floor(Math.random() * colors.length)],
+            twinkleSpeed: Math.random() * 0.02 + 0.005,
+            twinklePhase: Math.random() * Math.PI * 2
         });
+    }
+
+    // Shooting stars
+    const shootingStars = [];
+    function spawnShootingStar() {
+        if (Math.random() < 0.02 && shootingStars.length < 2) { // 2% chance per frame
+            shootingStars.push({
+                x: Math.random() * canvas.width * 1.2, 
+                y: Math.random() * canvas.height * 0.3 - 100, // Start high
+                length: Math.random() * 100 + 40,
+                speedX: -(Math.random() * 12 + 8), // Fast diagonal left
+                speedY: Math.random() * 6 + 3,
+                opacity: 1
+            });
+        }
     }
 
     function animateCosmic() {
         if (currentTheme !== 'cosmic') return;
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#fff';
+
+        // Draw normal stars with parallax and glow
         stars.forEach(s => {
-            ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.001 * s.speed) * 0.5;
+            s.twinklePhase += s.twinkleSpeed;
+            // Pulse between 0.2 and 1.0 opacity
+            const opacity = 0.2 + Math.abs(Math.sin(s.twinklePhase)) * 0.8; 
+
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = s.color;
+            ctx.shadowBlur = s.size * 4; // Glow effect
+            ctx.shadowColor = s.color;
+
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
             ctx.fill();
-            s.y -= s.speed;
+
+            // Disable shadow for performance and clean drawing of next elements
+            ctx.shadowBlur = 0;
+
+            // Move
+            s.y -= s.speed; // Drift upwards slowly
+            s.x -= s.speed * 0.3; // Slight diagonal drift
+            
+            // Wrap around seamlessly
             if(s.y < 0) s.y = canvas.height;
+            if(s.x < 0) s.x = canvas.width;
         });
+
+        // Handle shooting stars
+        spawnShootingStar();
+        for (let i = shootingStars.length - 1; i >= 0; i--) {
+            const ss = shootingStars[i];
+            
+            // Draw trail gradient
+            const gradient = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.length * (ss.speedX/Math.abs(ss.speedX)), ss.y - ss.length * (ss.speedY/Math.abs(ss.speedY)));
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${ss.opacity})`);
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = Math.max(1, ss.opacity * 2);
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(ss.x, ss.y);
+            const tailX = ss.x - ss.speedX * (ss.length / 10);
+            const tailY = ss.y - ss.speedY * (ss.length / 10);
+            ctx.lineTo(tailX, tailY);
+            ctx.stroke();
+
+            // Move shooting star
+            ss.x += ss.speedX;
+            ss.y += ss.speedY;
+            ss.opacity -= 0.02; // Fade out speed
+
+            // Remove if invisible or out of bounds
+            if (ss.opacity <= 0 || ss.x < -100 || ss.y > canvas.height + 100) {
+                shootingStars.splice(i, 1);
+            }
+        }
+
         requestAnimationFrame(animateCosmic);
     }
     animateCosmic();
