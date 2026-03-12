@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>系统访问</title>
+    <link id="theme-css" rel="stylesheet" href="css/unlock-cosmic.css">
+    <link rel="stylesheet" href="css/unlock-cyberpunk.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Inter', sans-serif; user-select: none; }
+        .theme-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transition: opacity 0.5s ease; }
+        .theme-container.hidden { opacity: 0; pointer-events: none; z-index: -1; }
+        .theme-container.active { opacity: 1; pointer-events: auto; z-index: 1; }
+        
+        #theme-switcher {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+        #theme-switcher:hover { opacity: 1; }
+        #theme-switcher button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        #theme-switcher button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* Transition Overlay */
+        #transition-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #transition-overlay.active {
+            opacity: 1;
+        }
+        .auth-success-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            color: #000;
+            letter-spacing: 10px;
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transform: scale(0.8);
+            transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #transition-overlay.active .auth-success-text {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body>
+    <div id="theme-switcher">
+        <button onclick="switchTheme('cosmic')" title="星空维度">🌌</button>
+        <button onclick="switchTheme('cyberpunk')" title="终端切入">💻</button>
+    </div>
+
+    <!-- Cosmic Theme -->
+    <div id="cosmic-container" class="theme-container active">
+        <canvas id="cosmic-canvas"></canvas>
+        <div class="glass-hint" id="cosmic-hint">连接星辰以开启界域...</div>
+        <div id="cosmic-targets-layer"></div>
+    </div>
+
+    <!-- Cyberpunk Theme -->
+    <div id="cyberpunk-container" class="theme-container hidden">
+        <div class="crt-overlay"></div>
+        <div class="matrix-bg" id="matrix-canvas-container">
+            <canvas id="matrix-canvas"></canvas>
+        </div>
+        <div class="cyber-terminal">
+            <div class="glitch-text" data-text="SYSTEM_LOCKED">SYSTEM_LOCKED</div>
+            <div class="cyber-hint">>> ENTER_OVERRIDE_SEQUENCE_</div>
+            <div id="cyber-targets-layer"></div>
+        </div>
+    </div>
+
+    <div id="transition-overlay">
+        <div class="auth-success-text">ACCESS GRANTED</div>
+    </div>
+
+    <!-- CryptoJS for SHA256 (PBKDF2 will use subtle crypto, but we need simple SHA256 for auth) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="js/unlock.js"></script>
+</body>
+</html>

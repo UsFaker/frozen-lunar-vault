@@ -1,0 +1,4 @@
+node_modules/
+.env
+vault.db
+server_logs.txt
