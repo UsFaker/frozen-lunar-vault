@@ -202,39 +202,97 @@ function initCosmic() {
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw normal stars with parallax and glow
+        const time = Date.now() * 0.001;
+
+        // --- 1. Draw Normal Stars (Background) ---
         stars.forEach(s => {
             s.twinklePhase += s.twinkleSpeed;
-            // Pulse between 0.2 and 1.0 opacity
             const opacity = 0.2 + Math.abs(Math.sin(s.twinklePhase)) * 0.8; 
 
             ctx.globalAlpha = opacity;
             ctx.fillStyle = s.color;
-            ctx.shadowBlur = s.size * 4; // Glow effect
+            ctx.shadowBlur = s.size * 3;
             ctx.shadowColor = s.color;
 
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
             ctx.fill();
 
-            // Disable shadow for performance and clean drawing of next elements
+            // Disable shadow
             ctx.shadowBlur = 0;
 
-            // Move
-            s.y -= s.speed; // Drift upwards slowly
-            s.x -= s.speed * 0.3; // Slight diagonal drift
+            // Constantly drifting slowly
+            s.y -= s.speed;
+            s.x -= s.speed * 0.3;
             
-            // Wrap around seamlessly
+            // Interaction with the Black Hole gravity (if close enough)
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const dx = centerX - s.x;
+            const dy = centerY - s.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist < 300) {
+                // Gently curve inwards
+                s.x += (dx / dist) * s.speed * (300/dist) * 0.5;
+                s.y += (dy / dist) * s.speed * (300/dist) * 0.5;
+            }
+
             if(s.y < 0) s.y = canvas.height;
             if(s.x < 0) s.x = canvas.width;
         });
 
-        // Handle shooting stars
+        // --- 2. Draw majestic Black Hole / Nebula in the center ---
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        
+        ctx.save();
+        ctx.translate(cx, cy);
+        
+        // Accretion disk (spinning)
+        ctx.rotate(time * 0.1); // Slow rotation
+        ctx.globalAlpha = 0.8;
+        
+        // Outer glowing gas ring
+        const outerGrad = ctx.createRadialGradient(0, 0, 100, 0, 0, 350);
+        outerGrad.addColorStop(0, 'rgba(255, 150, 50, 0.4)');
+        outerGrad.addColorStop(0.3, 'rgba(150, 50, 255, 0.2)');
+        outerGrad.addColorStop(0.6, 'rgba(50, 100, 255, 0.1)');
+        outerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = outerGrad;
+        ctx.beginPath();
+        // Squish the circle into an ellipse to look like a disk
+        ctx.ellipse(0, 0, 350, 180, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Inner hot accretion disk
+        ctx.rotate(-time * 0.2); // Counter rotation for chaos
+        const innerGrad = ctx.createRadialGradient(0, 0, 50, 0, 0, 150);
+        innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        innerGrad.addColorStop(0.2, 'rgba(255, 200, 100, 0.8)');
+        innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = innerGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 150, 60, time * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // The Event Horizon (The Black Hole itself)
+        ctx.fillStyle = '#000000';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(255, 100, 0, 0.5)'; // Einstein ring glow
+        ctx.beginPath();
+        ctx.arc(0, 0, 60, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+
+        // --- 3. Draw Shooting Stars ---
         spawnShootingStar();
         for (let i = shootingStars.length - 1; i >= 0; i--) {
             const ss = shootingStars[i];
             
-            // Draw trail gradient
             const gradient = ctx.createLinearGradient(ss.x, ss.y, ss.x - ss.length * (ss.speedX/Math.abs(ss.speedX)), ss.y - ss.length * (ss.speedY/Math.abs(ss.speedY)));
             gradient.addColorStop(0, `rgba(255, 255, 255, ${ss.opacity})`);
             gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -243,6 +301,7 @@ function initCosmic() {
             ctx.strokeStyle = gradient;
             ctx.lineWidth = Math.max(1, ss.opacity * 2);
             ctx.lineCap = 'round';
+            ctx.shadowBlur = 0; // Prevent huge shadow box
             
             ctx.beginPath();
             ctx.moveTo(ss.x, ss.y);
@@ -251,12 +310,10 @@ function initCosmic() {
             ctx.lineTo(tailX, tailY);
             ctx.stroke();
 
-            // Move shooting star
             ss.x += ss.speedX;
             ss.y += ss.speedY;
-            ss.opacity -= 0.02; // Fade out speed
+            ss.opacity -= 0.015;
 
-            // Remove if invisible or out of bounds
             if (ss.opacity <= 0 || ss.x < -100 || ss.y > canvas.height + 100) {
                 shootingStars.splice(i, 1);
             }
