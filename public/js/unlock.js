@@ -158,40 +158,79 @@ function initCosmic() {
         layer.appendChild(star);
     }
 
-    // Canvas stars (Enhanced Cosmic Version)
+    // Canvas stars (Majestic Milky Way Version)
     const canvas = document.getElementById('cosmic-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
+    // 1. Moving Parallax Stars
     const stars = [];
-    const colors = ['#ffffff', '#ffe9c4', '#d4fbff', '#a3d8ff']; // white, pale yellow, pale cyan, light blue
+    const colors = ['#ffffff', '#ffe9c4', '#d4fbff', '#a3d8ff'];
 
-    for(let i=0; i<350; i++) {
-        // Parallax depth: 0 is distant, 1 is close
+    for(let i=0; i<400; i++) {
         const depth = Math.random(); 
         stars.push({
             x: Math.random() * canvas.width,
             y: Math.random() * canvas.height,
-            size: (Math.random() * 1.2 + 0.3) * (depth + 0.5), // closer stars are bigger
-            speed: (Math.random() * 0.15 + 0.05) * (depth + 0.2), // closer stars move faster
+            size: (Math.random() * 1.5 + 0.2) * (depth + 0.5),
+            speed: (Math.random() * 0.1) * (depth + 0.2),
             color: colors[Math.floor(Math.random() * colors.length)],
             twinkleSpeed: Math.random() * 0.02 + 0.005,
             twinklePhase: Math.random() * Math.PI * 2
         });
     }
 
-    // Shooting stars
+    // 2. The Milky Way Band (Dense static stars + dust)
+    const milkyWayStars = [];
+    const dustClouds = [];
+    const canvasDiagonal = Math.sqrt(canvas.width*canvas.width + canvas.height*canvas.height);
+    
+    for(let i=0; i<4000; i++) {
+        // Gaussian spread along a horizontal line (before rotation)
+        const x = (Math.random() - 0.5) * canvasDiagonal * 1.5;
+        const randY = (Math.random() + Math.random() + Math.random() + Math.random() + Math.random() + Math.random() - 3) / 3;
+        const y = randY * canvas.width * 0.3;
+
+        const intensity = 1 - Math.abs(randY);
+        
+        if (intensity > 0) {
+            milkyWayStars.push({
+                x, y,
+                size: Math.random() * (1.5 * intensity + 0.2),
+                opacity: intensity * (Math.random() * 0.7 + 0.1),
+                color: Math.random() > 0.85 ? '#a3d8ff' : (Math.random() > 0.85 ? '#ffe9c4' : '#ffffff'),
+                twinkle: Math.random() * Math.PI * 2
+            });
+        }
+    }
+
+    for(let i=0; i<25; i++) {
+        const x = (Math.random() - 0.5) * canvasDiagonal;
+        const randY = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+        const y = randY * canvas.width * 0.15;
+        
+        dustClouds.push({
+            x, y,
+            radius: Math.random() * 200 + 100,
+            r: Math.floor(Math.random() * 30 + 10),
+            g: Math.floor(Math.random() * 30 + 10),
+            b: Math.floor(Math.random() * 60 + 60),
+            opacity: Math.random() * 0.08 + 0.02
+        });
+    }
+
+    // 3. Shooting stars
     const shootingStars = [];
     function spawnShootingStar() {
-        if (Math.random() < 0.02 && shootingStars.length < 2) { // 2% chance per frame
+        if (Math.random() < 0.015 && shootingStars.length < 2) {
             shootingStars.push({
-                x: Math.random() * canvas.width * 1.2, 
-                y: Math.random() * canvas.height * 0.3 - 100, // Start high
-                length: Math.random() * 100 + 40,
-                speedX: -(Math.random() * 12 + 8), // Fast diagonal left
-                speedY: Math.random() * 6 + 3,
+                x: Math.random() * canvas.width * 1.5, 
+                y: Math.random() * canvas.height * 0.5 - 200,
+                length: Math.random() * 150 + 50,
+                speedX: -(Math.random() * 15 + 10),
+                speedY: Math.random() * 8 + 4,
                 opacity: 1
             });
         }
@@ -200,11 +239,46 @@ function initCosmic() {
     function animateCosmic() {
         if (currentTheme !== 'cosmic') return;
         
+        ctx.globalCompositeOperation = 'source-over';
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const time = Date.now() * 0.001;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
 
-        // --- 1. Draw Normal Stars (Background) ---
+        // --- Render Milky Way (Rotates slowly) ---
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(-Math.PI / 6 + time * 0.01); // 30 degree tilt + slow rotation
+
+        // 1. Dust Clouds
+        ctx.globalCompositeOperation = 'screen';
+        dustClouds.forEach(cloud => {
+            const grad = ctx.createRadialGradient(cloud.x, cloud.y, 0, cloud.x, cloud.y, cloud.radius);
+            grad.addColorStop(0, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, ${cloud.opacity})`);
+            grad.addColorStop(1, `rgba(${cloud.r}, ${cloud.g}, ${cloud.b}, 0)`);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cloud.x, cloud.y, cloud.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // 2. Milky Way Stars
+        ctx.globalCompositeOperation = 'lighter';
+        milkyWayStars.forEach(s => {
+            ctx.fillStyle = s.color;
+            // Only twinkle a fraction of the stars for performance
+            const currentOpacity = s.opacity * (0.7 + Math.sin(time * 2 + s.twinkle) * 0.3); 
+            ctx.globalAlpha = currentOpacity;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        ctx.restore();
+
+        // --- Render Active Parallax Background Stars ---
+        ctx.globalCompositeOperation = 'screen';
         stars.forEach(s => {
             s.twinklePhase += s.twinkleSpeed;
             const opacity = 0.2 + Math.abs(Math.sin(s.twinklePhase)) * 0.8; 
@@ -218,77 +292,18 @@ function initCosmic() {
             ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
             ctx.fill();
 
-            // Disable shadow
             ctx.shadowBlur = 0;
 
-            // Constantly drifting slowly
+            // Continual slow drift
             s.y -= s.speed;
-            s.x -= s.speed * 0.3;
+            s.x -= s.speed * 0.2;
             
-            // Interaction with the Black Hole gravity (if close enough)
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const dx = centerX - s.x;
-            const dy = centerY - s.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            
-            if (dist < 300) {
-                // Gently curve inwards
-                s.x += (dx / dist) * s.speed * (300/dist) * 0.5;
-                s.y += (dy / dist) * s.speed * (300/dist) * 0.5;
-            }
-
             if(s.y < 0) s.y = canvas.height;
             if(s.x < 0) s.x = canvas.width;
         });
 
-        // --- 2. Draw majestic Black Hole / Nebula in the center ---
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-        
-        ctx.save();
-        ctx.translate(cx, cy);
-        
-        // Accretion disk (spinning)
-        ctx.rotate(time * 0.1); // Slow rotation
-        ctx.globalAlpha = 0.8;
-        
-        // Outer glowing gas ring
-        const outerGrad = ctx.createRadialGradient(0, 0, 100, 0, 0, 350);
-        outerGrad.addColorStop(0, 'rgba(255, 150, 50, 0.4)');
-        outerGrad.addColorStop(0.3, 'rgba(150, 50, 255, 0.2)');
-        outerGrad.addColorStop(0.6, 'rgba(50, 100, 255, 0.1)');
-        outerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        
-        ctx.fillStyle = outerGrad;
-        ctx.beginPath();
-        // Squish the circle into an ellipse to look like a disk
-        ctx.ellipse(0, 0, 350, 180, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Inner hot accretion disk
-        ctx.rotate(-time * 0.2); // Counter rotation for chaos
-        const innerGrad = ctx.createRadialGradient(0, 0, 50, 0, 0, 150);
-        innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-        innerGrad.addColorStop(0.2, 'rgba(255, 200, 100, 0.8)');
-        innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        
-        ctx.fillStyle = innerGrad;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 150, 60, time * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        // The Event Horizon (The Black Hole itself)
-        ctx.fillStyle = '#000000';
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = 'rgba(255, 100, 0, 0.5)'; // Einstein ring glow
-        ctx.beginPath();
-        ctx.arc(0, 0, 60, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.restore();
-
-        // --- 3. Draw Shooting Stars ---
+        // --- Render Shooting Stars ---
+        ctx.globalCompositeOperation = 'screen';
         spawnShootingStar();
         for (let i = shootingStars.length - 1; i >= 0; i--) {
             const ss = shootingStars[i];
@@ -301,7 +316,6 @@ function initCosmic() {
             ctx.strokeStyle = gradient;
             ctx.lineWidth = Math.max(1, ss.opacity * 2);
             ctx.lineCap = 'round';
-            ctx.shadowBlur = 0; // Prevent huge shadow box
             
             ctx.beginPath();
             ctx.moveTo(ss.x, ss.y);
