@@ -1,61 +1,63 @@
-# 🌌 个人信息保险箱 (Frozen Lunar Vault)
+# 🌌 Frozen Lunar Vault
 
-一个轻量级、高颜值的全平台响应式个人信息存储库。采用“太空/赛博”双主题隐藏式解锁机制，以及 **全客户端 AES-256-GCM 本地加密** 保护您的隐私。
+A lightweight, visually stunning, fully responsive personal information vault featuring "Space/Cyberpunk" dual-theme hidden unlock mechanisms and **client-side AES-256-GCM encryption** to protect your privacy.
 
-非常适合部署在 1核 1G 的轻量级云服务器上，用来存放您的账号密码、随笔、记录和服务器配置。
+Perfectly suited for deployment on 1 vCPU / 1 GiB lightweight cloud servers to store your accounts, passwords, notes, records, and server configurations.
 
----
-
-## ✨ 核心特性
-
-- **🔐 真正的零知识架构**: 所有的密码、随笔、记录数据都在 **你的本地浏览器进行 AES-256 加密** 后才会发送到服务器。服务器数据库里存的全部是乱码。
-- **🌌 炫酷隐藏式解锁**:
-  - **星空主题 (Cosmic)**: 页面是一片飘落流星的星空，你需要按特定的顺序点击 5 颗特定的“小星星”才能解锁进入。
-  - **赛博朋克主题 (Cyberpunk)**: 页面是一个终端矩阵界面，按特定顺序点击希腊字母解锁。（可通过右下角图标随时切换主题）
-- **🚀 极度轻量化**:
-  - 纯前端 HTML + 纯手工打造 CSS 特效 (0 UI 框架负担，响应极快)。
-  - 后端基于 Node.js + `better-sqlite3`（单文件数据库，0 配置，占用系统内存极小）。
-- **📱 全平台完美兼容**: PC 端宽屏展示网格卡片，手机端自适应自动切换为底部导航栏。
+*Read this in other languages: [简体中文](README_zh-CN.md)*
 
 ---
 
-## 🛠️ 快速部署
+## ✨ Core Features
 
-环境要求：Node.js >= 18
+- **🔐 True Zero-Knowledge Architecture**: All your passwords, notes, and record data are encrypted using **AES-256 locally in your browser** before being sent to the server. The server database only stores ciphertext.
+- **🌌 Stunning Hidden Unlock Mechanisms**:
+  - **Cosmic Theme**: The page is a starry sky with falling meteors. You need to click 5 specific "invisible stars" in an exact sequence to unlock and enter.
+  - **Cyberpunk Theme**: The page is a terminal matrix interface. Click Greek letters in a specific sequence to unlock. (Themes can be switched anytime via the bottom right icon).
+- **🚀 Ultra Lightweight**:
+  - Pure frontend HTML + handcrafted CSS effects (0 UI framework bloat, extremely fast response).
+  - Node.js + `better-sqlite3` backend (single-file database, zero configuration, minimal system RAM usage).
+- **📱 Fully Responsive**: Desktop displays a wide-screen grid card layout, while mobile automatically adapts to a bottom navigation bar.
 
-### 1. 获取代码
+---
+
+## 🛠️ Quick Deployment
+
+Environment requirement: Node.js >= 18
+
+### 1. Get the Code
 ```bash
 git clone https://github.com/UsFaker/frozen-lunar-vault.git
 cd frozen-lunar-vault
 ```
 
-### 2. 安装依赖并配置
+### 2. Install Dependencies & Configure
 ```bash
 npm install
 
-# 复制环境变量文件
+# Copy environment template
 cp .env.example .env
 ```
-*(注意：在 `.env` 中，`UNLOCK_HASH` 对应您点击图案顺序的 SHA256 哈希值。目前默认的顺序为 `0,1,2,3,4` 的对应的 Hash)*
+*(Note: In the `.env` file, `UNLOCK_HASH` corresponds to the SHA256 hash of your pattern sequence. The currently configured default pattern is the hash for the string sequence `0,1,2,3,4`)*
 
-### 3. 启动服务 (PC/手机皆可访问)
+### 3. Start the Server
 ```bash
-# 启动本地开发/体验服务
+# Start local dev/testing server
 npm start
 ```
-此时通过浏览器访问：`http://localhost:3000` 即可看到炫酷的解锁界面。
+Access the stunning unlock interface by opening `http://localhost:3000` in your browser.
 
 ---
 
-## 🤔 如何使用？(本地体验版说明)
+## 🤔 How to Use (Local Demo Guide)
 
-1. **解锁系统**: 
-   - 默认密码顺序为前 5 颗隐藏的星星。您可以点击右上角的 **“💡 显示解锁提示”** 来查看它们的准确位置（数字 1~5）。
-   - 按顺序点击后，将触发“空间跳跃 / 终端骇入”动画并进入系统。
-2. **记录添加**:
-   - 进入内部后点击右下角 `+` 号。
-   - 分类包括：`🔑 账号密码`、`📝 随笔`、`📋 记录`、`💻 代码/配置`。
-   - 所有数据在点击“保存”时，瞬间在浏览器本地化为 AES-256 密文再发往后端 SQLite 数据库。
+1. **Unlock the System**: 
+   - The default password sequence is the first 5 hidden stars/letters. You can test the mechanism by clicking the **"💡 显示解锁提示" (Show Unlock Hint)** button in the top right corner to temporarily reveal their exact positions (numbers 1~5).
+   - Clicking them in order triggers a "space jump / terminal hack" animation and logs you into the system.
+2. **Adding Records**:
+   - Once inside, click the `+` button in the bottom right corner.
+   - Categories include: `🔑 Accounts`, `📝 Notes`, `📋 Records`, `💻 Code/Config`.
+   - When you click "Save", the data is instantly encrypted into AES-256 ciphertext in your browser before being dispatched to the backend SQLite database.
 
 ---
 
